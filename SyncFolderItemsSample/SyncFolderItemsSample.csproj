@@ -105,6 +105,12 @@
       <Version>4.48.1</Version>
     </PackageReference>
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\..\Github Repositories\ews-managed-api\Microsoft.Exchange.WebServices.Data.csproj">
+      <Project>{f059972f-0561-4203-abb8-3abb41ccbe22}</Project>
+      <Name>Microsoft.Exchange.WebServices.Data</Name>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

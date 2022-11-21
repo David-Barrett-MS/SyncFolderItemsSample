@@ -30,6 +30,7 @@
         {
             this.components = new System.ComponentModel.Container();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.radioButtonOffice365 = new System.Windows.Forms.RadioButton();
             this.radioButtonUseAutodiscover = new System.Windows.Forms.RadioButton();
             this.textBoxEWSUrl = new System.Windows.Forms.TextBox();
             this.radioButtonEwsUrl = new System.Windows.Forms.RadioButton();
@@ -50,16 +51,15 @@
             this.groupBox3 = new System.Windows.Forms.GroupBox();
             this.listBoxEvents = new System.Windows.Forms.ListBox();
             this.timer1 = new System.Windows.Forms.Timer(this.components);
-            this.radioButtonOffice365 = new System.Windows.Forms.RadioButton();
             this.groupBox4 = new System.Windows.Forms.GroupBox();
+            this.radioButtonAuthOther = new System.Windows.Forms.RadioButton();
+            this.buttonAcquireToken = new System.Windows.Forms.Button();
+            this.textBoxOAuthToken = new System.Windows.Forms.TextBox();
+            this.radioButtonOAuth = new System.Windows.Forms.RadioButton();
             this.label2 = new System.Windows.Forms.Label();
             this.label1 = new System.Windows.Forms.Label();
             this.textBoxPassword = new System.Windows.Forms.TextBox();
             this.textBoxUsername = new System.Windows.Forms.TextBox();
-            this.radioButtonOAuth = new System.Windows.Forms.RadioButton();
-            this.textBoxOAuthToken = new System.Windows.Forms.TextBox();
-            this.buttonAcquireToken = new System.Windows.Forms.Button();
-            this.radioButtonAuthOther = new System.Windows.Forms.RadioButton();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             this.groupBox3.SuspendLayout();
@@ -83,6 +83,18 @@
             this.groupBox1.TabIndex = 1;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "EWS Configuration";
+            // 
+            // radioButtonOffice365
+            // 
+            this.radioButtonOffice365.AutoSize = true;
+            this.radioButtonOffice365.Checked = true;
+            this.radioButtonOffice365.Location = new System.Drawing.Point(9, 20);
+            this.radioButtonOffice365.Name = "radioButtonOffice365";
+            this.radioButtonOffice365.Size = new System.Drawing.Size(74, 17);
+            this.radioButtonOffice365.TabIndex = 24;
+            this.radioButtonOffice365.TabStop = true;
+            this.radioButtonOffice365.Text = "Office 365";
+            this.radioButtonOffice365.UseVisualStyleBackColor = true;
             // 
             // radioButtonUseAutodiscover
             // 
@@ -141,7 +153,6 @@
             this.textBoxMailbox.Name = "textBoxMailbox";
             this.textBoxMailbox.Size = new System.Drawing.Size(284, 20);
             this.textBoxMailbox.TabIndex = 18;
-            this.textBoxMailbox.Text = "dave@demonmaths.co.uk";
             this.textBoxMailbox.TextChanged += new System.EventHandler(this.textBoxMailbox_TextChanged);
             // 
             // label9
@@ -284,18 +295,6 @@
             this.listBoxEvents.Size = new System.Drawing.Size(811, 260);
             this.listBoxEvents.TabIndex = 0;
             // 
-            // radioButtonOffice365
-            // 
-            this.radioButtonOffice365.AutoSize = true;
-            this.radioButtonOffice365.Checked = true;
-            this.radioButtonOffice365.Location = new System.Drawing.Point(9, 20);
-            this.radioButtonOffice365.Name = "radioButtonOffice365";
-            this.radioButtonOffice365.Size = new System.Drawing.Size(74, 17);
-            this.radioButtonOffice365.TabIndex = 24;
-            this.radioButtonOffice365.TabStop = true;
-            this.radioButtonOffice365.Text = "Office 365";
-            this.radioButtonOffice365.UseVisualStyleBackColor = true;
-            // 
             // groupBox4
             // 
             this.groupBox4.Controls.Add(this.radioButtonAuthOther);
@@ -312,6 +311,46 @@
             this.groupBox4.TabIndex = 4;
             this.groupBox4.TabStop = false;
             this.groupBox4.Text = "Authentication";
+            // 
+            // radioButtonAuthOther
+            // 
+            this.radioButtonAuthOther.AutoSize = true;
+            this.radioButtonAuthOther.Location = new System.Drawing.Point(428, 17);
+            this.radioButtonAuthOther.Name = "radioButtonAuthOther";
+            this.radioButtonAuthOther.Size = new System.Drawing.Size(54, 17);
+            this.radioButtonAuthOther.TabIndex = 11;
+            this.radioButtonAuthOther.TabStop = true;
+            this.radioButtonAuthOther.Text = "Other:";
+            this.radioButtonAuthOther.UseVisualStyleBackColor = true;
+            // 
+            // buttonAcquireToken
+            // 
+            this.buttonAcquireToken.Location = new System.Drawing.Point(304, 14);
+            this.buttonAcquireToken.Name = "buttonAcquireToken";
+            this.buttonAcquireToken.Size = new System.Drawing.Size(92, 23);
+            this.buttonAcquireToken.TabIndex = 10;
+            this.buttonAcquireToken.Text = "Acquire Token";
+            this.buttonAcquireToken.UseVisualStyleBackColor = true;
+            this.buttonAcquireToken.Click += new System.EventHandler(this.buttonAcquireToken_Click);
+            // 
+            // textBoxOAuthToken
+            // 
+            this.textBoxOAuthToken.Location = new System.Drawing.Point(70, 16);
+            this.textBoxOAuthToken.Name = "textBoxOAuthToken";
+            this.textBoxOAuthToken.Size = new System.Drawing.Size(228, 20);
+            this.textBoxOAuthToken.TabIndex = 9;
+            // 
+            // radioButtonOAuth
+            // 
+            this.radioButtonOAuth.AutoSize = true;
+            this.radioButtonOAuth.Checked = true;
+            this.radioButtonOAuth.Location = new System.Drawing.Point(9, 17);
+            this.radioButtonOAuth.Name = "radioButtonOAuth";
+            this.radioButtonOAuth.Size = new System.Drawing.Size(55, 17);
+            this.radioButtonOAuth.TabIndex = 8;
+            this.radioButtonOAuth.TabStop = true;
+            this.radioButtonOAuth.Text = "OAuth";
+            this.radioButtonOAuth.UseVisualStyleBackColor = true;
             // 
             // label2
             // 
@@ -345,46 +384,6 @@
             this.textBoxUsername.Name = "textBoxUsername";
             this.textBoxUsername.Size = new System.Drawing.Size(99, 20);
             this.textBoxUsername.TabIndex = 4;
-            // 
-            // radioButtonOAuth
-            // 
-            this.radioButtonOAuth.AutoSize = true;
-            this.radioButtonOAuth.Checked = true;
-            this.radioButtonOAuth.Location = new System.Drawing.Point(9, 17);
-            this.radioButtonOAuth.Name = "radioButtonOAuth";
-            this.radioButtonOAuth.Size = new System.Drawing.Size(55, 17);
-            this.radioButtonOAuth.TabIndex = 8;
-            this.radioButtonOAuth.TabStop = true;
-            this.radioButtonOAuth.Text = "OAuth";
-            this.radioButtonOAuth.UseVisualStyleBackColor = true;
-            // 
-            // textBoxOAuthToken
-            // 
-            this.textBoxOAuthToken.Location = new System.Drawing.Point(70, 16);
-            this.textBoxOAuthToken.Name = "textBoxOAuthToken";
-            this.textBoxOAuthToken.Size = new System.Drawing.Size(228, 20);
-            this.textBoxOAuthToken.TabIndex = 9;
-            // 
-            // buttonAcquireToken
-            // 
-            this.buttonAcquireToken.Location = new System.Drawing.Point(304, 14);
-            this.buttonAcquireToken.Name = "buttonAcquireToken";
-            this.buttonAcquireToken.Size = new System.Drawing.Size(92, 23);
-            this.buttonAcquireToken.TabIndex = 10;
-            this.buttonAcquireToken.Text = "Acquire Token";
-            this.buttonAcquireToken.UseVisualStyleBackColor = true;
-            this.buttonAcquireToken.Click += new System.EventHandler(this.buttonAcquireToken_Click);
-            // 
-            // radioButtonAuthOther
-            // 
-            this.radioButtonAuthOther.AutoSize = true;
-            this.radioButtonAuthOther.Location = new System.Drawing.Point(428, 17);
-            this.radioButtonAuthOther.Name = "radioButtonAuthOther";
-            this.radioButtonAuthOther.Size = new System.Drawing.Size(54, 17);
-            this.radioButtonAuthOther.TabIndex = 11;
-            this.radioButtonAuthOther.TabStop = true;
-            this.radioButtonAuthOther.Text = "Other:";
-            this.radioButtonAuthOther.UseVisualStyleBackColor = true;
             // 
             // Form1
             // 

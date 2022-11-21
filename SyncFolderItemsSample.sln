@@ -4,6 +4,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 VisualStudioVersion = 17.1.31911.260
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SyncFolderItemsSample", "SyncFolderItemsSample\SyncFolderItemsSample.csproj", "{BF9FCB6F-4B76-4CA9-97A8-AA5ECD5BF1DA}"
+	ProjectSection(ProjectDependencies) = postProject
+		{F059972F-0561-4203-ABB8-3ABB41CCBE22} = {F059972F-0561-4203-ABB8-3ABB41CCBE22}
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.Exchange.WebServices.Data", "..\..\..\Github Repositories\ews-managed-api\Microsoft.Exchange.WebServices.Data.csproj", "{F059972F-0561-4203-ABB8-3ABB41CCBE22}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +20,10 @@ Global
 		{BF9FCB6F-4B76-4CA9-97A8-AA5ECD5BF1DA}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BF9FCB6F-4B76-4CA9-97A8-AA5ECD5BF1DA}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BF9FCB6F-4B76-4CA9-97A8-AA5ECD5BF1DA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F059972F-0561-4203-ABB8-3ABB41CCBE22}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F059972F-0561-4203-ABB8-3ABB41CCBE22}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F059972F-0561-4203-ABB8-3ABB41CCBE22}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F059972F-0561-4203-ABB8-3ABB41CCBE22}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
