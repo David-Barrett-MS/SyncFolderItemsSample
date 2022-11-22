@@ -13,7 +13,7 @@ using System.Threading;
 
 namespace SyncFolderItemsSample
 {
-    public partial class Form1 : Form
+    public partial class FormMain : Form
     {
         private ExchangeService _service = null;
         private Dictionary<string, string> _autodiscoverCache = new Dictionary<string, string>();
@@ -22,8 +22,10 @@ namespace SyncFolderItemsSample
         private Auth.FormAzureApplicationRegistration _oAuthAppRegForm = null;
         private Auth.CredentialHandler _credentialHandler = null;
         private ClassTraceListener _traceListener = null;
+        private bool _amSyncing = false;
+        private FormSyncViewer _mailboxViewer = null;
 
-        public Form1()
+        public FormMain()
         {
             InitializeComponent();
             //ServicePointManager.ServerCertificateValidationCallback += (sender, cert, chain, sslPolicyErrors) => true;
@@ -48,9 +50,45 @@ namespace SyncFolderItemsSample
             }
         }
 
+        private void EventListBoxBeginUpdate()
+        {
+            Action action = new Action(() =>
+            {
+                listBoxEvents.BeginUpdate();
+            });
+            if (listBoxEvents.InvokeRequired)
+                listBoxEvents.Invoke(action);
+            else
+                action();
+        }
+
+        private void EventListBoxEndUpdate()
+        {
+            Action action = new Action(() =>
+            {
+                listBoxEvents.EndUpdate();
+                listBoxEvents.Refresh();
+            });
+            if (listBoxEvents.InvokeRequired)
+                listBoxEvents.Invoke(action);
+            else
+                action();
+        }
+
+        private void StartSync()
+        {
+            if (checkBoxShowMailboxViewer.Checked && _mailboxViewer == null)
+            {
+                _mailboxViewer = new FormSyncViewer();
+                _mailboxViewer.Show();
+            }
+
+            ThreadPool.QueueUserWorkItem(new WaitCallback(Synchronize), null);
+        }
+
         private void buttonSyncNow_Click(object sender, EventArgs e)
         {
-            ThreadPool.QueueUserWorkItem(new WaitCallback(Synchronize), null);
+            StartSync();
         }
 
         private bool InitCredentialHandler()
@@ -165,11 +203,38 @@ namespace SyncFolderItemsSample
 
         private void Synchronize(object e)
         {
-            if (!GetExchangeService())
+            if (_amSyncing)
                 return;
 
+            _amSyncing = true;
             ToggleSyncButtons(false);
+
+            if (!GetExchangeService())
+            {
+                ToggleSyncButtons(true);
+                _amSyncing = false;
+                return;
+            }
+
             bool bMoreEvents = true;
+            LogEvent("Synchronisation started");
+
+            // Check we can get root folder
+            try
+            {
+                _credentialHandler.UpdateOAuthCredentialsForExchangeService(_service);
+                SetClientRequestId();
+                // Add root folder to mailbox view
+                Folder msgFolderRoot = Folder.Bind(_service, WellKnownFolderName.MsgFolderRoot,
+                    new PropertySet(BasePropertySet.IdOnly, FolderSchema.DisplayName));
+                if (String.IsNullOrEmpty(_folderHeirarchySyncState))
+                    _mailboxViewer?.AddFolder(msgFolderRoot.Id.UniqueId, null, msgFolderRoot.DisplayName);
+            }
+            catch (Exception ex)
+            {
+                LogEvent(String.Format("Error binding to MsgFolderRoot: {0}", ex.Message));
+                return;
+            }
 
             while (bMoreEvents)
             {
@@ -178,7 +243,9 @@ namespace SyncFolderItemsSample
                 {
                     _credentialHandler.UpdateOAuthCredentialsForExchangeService(_service);
                     SetClientRequestId();
-                    folderChangeCollection = _service.SyncFolderHierarchy(new FolderId(WellKnownFolderName.MsgFolderRoot), PropertySet.FirstClassProperties, _folderHeirarchySyncState);
+                    folderChangeCollection = _service.SyncFolderHierarchy(new FolderId(WellKnownFolderName.MsgFolderRoot),
+                        new PropertySet(BasePropertySet.IdOnly, FolderSchema.DisplayName, FolderSchema.ParentFolderId),
+                        _folderHeirarchySyncState);
                 }
                 catch (Exception ex)
                 {
@@ -191,6 +258,7 @@ namespace SyncFolderItemsSample
                 // you can create, update, or delete folders based on the changes retrieved from the server. 
                 if (folderChangeCollection.Count != 0)
                 {
+                    EventListBoxBeginUpdate();
                     foreach (FolderChange fc in folderChangeCollection)
                     {
                         LogEvent(String.Format("Folder {0}: {1}", fc.Folder.DisplayName, fc.ChangeType.ToString()));
@@ -199,6 +267,7 @@ namespace SyncFolderItemsSample
                             case ChangeType.Create:
                                 {
                                     _folderSyncState.Add(fc.Folder.Id.UniqueId, null);
+                                    _mailboxViewer?.AddFolder(fc.Folder.Id.UniqueId, fc.Folder.ParentFolderId.UniqueId, fc.Folder.DisplayName);
                                     break;
                                 }
 
@@ -212,6 +281,7 @@ namespace SyncFolderItemsSample
                                 }
                         }
                     }
+                    EventListBoxEndUpdate();
                 }
                 bMoreEvents = folderChangeCollection.MoreChangesAvailable;
             }
@@ -219,6 +289,18 @@ namespace SyncFolderItemsSample
             SyncFolders();
             LogEvent("Synchronisation complete");
             ToggleSyncButtons(true);
+            _amSyncing = false;
+            if (buttonStopTimedSync.Enabled)
+            {
+                Action action = new Action(() =>
+                {
+                    timerSync.Start();
+                });
+                if (InvokeRequired)
+                    Invoke(action);
+                else
+                    action();
+            }
         }
 
         private void SyncFolders()
@@ -256,10 +338,12 @@ namespace SyncFolderItemsSample
                 }
                 if (itemChangeCollection.Count != 0)
                 {
+                    EventListBoxBeginUpdate();
                     foreach (ItemChange ic in itemChangeCollection)
                     {
                         if (ic.ChangeType == ChangeType.Create)
                         {
+                            _mailboxViewer?.AddMessage(folderId, ic.Item.Id.UniqueId, ic.Item.Subject);
                             if (checkBoxAddCustomId.Checked)
                             {
                                 // Item was created.  Check if it has our Id on it (if it does, it was a copy and we need to assign a new Id)
@@ -302,9 +386,7 @@ namespace SyncFolderItemsSample
                                 }
                             }
                             else
-                            {
                                 LogEvent($"Folder {folder.DisplayName}, Item {ic.Item.Subject}: Create");
-                            }
                         }
                         else
                         {
@@ -316,8 +398,9 @@ namespace SyncFolderItemsSample
                                 LogEvent($"Folder {folder.DisplayName}, Item deleted: {ic.ItemId.UniqueId}");
                         }
                     }
+                    EventListBoxEndUpdate();
                 }
-                bMoreEvents = itemChangeCollection.MoreChangesAvailable;
+                bMoreEvents = itemChangeCollection.MoreChangesAvailable;                
             }
             return syncState;
         }
@@ -360,7 +443,10 @@ namespace SyncFolderItemsSample
         private void buttonStartTimedSync_Click(object sender, EventArgs e)
         {
             DateTime interval = (DateTime)dtpSyncInterval.Value;
-            timer1.Interval = (interval.Second*100);
+            timerSync.Interval = (interval.Second*1000) + (interval.Minute * 60000) + (interval.Hour * 60000 * 24);
+            buttonStartTimedSync.Enabled = false;
+            buttonStopTimedSync.Enabled = true;
+            StartSync();
         }
 
         private void buttonAcquireToken_Click(object sender, EventArgs e)
@@ -372,6 +458,22 @@ namespace SyncFolderItemsSample
             }
             _oAuthAppRegForm.AcquireToken();
             textBoxOAuthToken.Text = _oAuthAppRegForm.AccessToken;
+        }
+
+        private void timerSync_Tick(object sender, EventArgs e)
+        {
+            if (_amSyncing)
+                return;
+
+            timerSync.Stop();
+            StartSync();
+        }
+
+        private void buttonStopTimedSync_Click(object sender, EventArgs e)
+        {
+            buttonStopTimedSync.Enabled = false;
+            buttonStartTimedSync.Enabled = true;
+            timerSync.Stop();
         }
     }
 }

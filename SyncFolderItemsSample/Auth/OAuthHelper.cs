@@ -54,7 +54,7 @@ namespace SyncFolderItemsSample.Auth
             var ewsScopes = new string[] { $"{sResourceUrl}{Scope}" };
 
 
-            if (_oAuthApplication != null)
+            if (_oAuthApplication != null && _oAuthApplication is PublicClientApplication)
             {
                 // This is a token renewal - we try to renew silently first
                 try
@@ -98,10 +98,12 @@ namespace SyncFolderItemsSample.Auth
             // Configure the MSAL client to get tokens
             var ewsScopes = new string[] { $"{sResourceUrl}.default" };
 
-            _oAuthApplication = ConfidentialClientApplicationBuilder.Create(ClientId)
-                .WithAuthority(AzureCloudInstance.AzurePublic, TenantId)
-                .WithClientSecret(ClientSecret)
-                .Build();
+            // ConfidentialClientApplication handles it's own cache/renewal
+            if (_oAuthApplication == null || !(_oAuthApplication is ConfidentialClientApplication))
+                _oAuthApplication = ConfidentialClientApplicationBuilder.Create(ClientId)
+                    .WithAuthority(AzureCloudInstance.AzurePublic, TenantId)
+                    .WithClientSecret(ClientSecret)
+                    .Build();
 
             AuthenticationResult result = null;
             try
@@ -122,10 +124,12 @@ namespace SyncFolderItemsSample.Auth
             // Configure the MSAL client to get tokens
             var ewsScopes = new string[] { $"{sResourceUrl}.default" };
 
-            _oAuthApplication = ConfidentialClientApplicationBuilder.Create(ClientId)
-                .WithAuthority(AzureCloudInstance.AzurePublic, TenantId)
-                .WithCertificate(ClientCertificate)
-                .Build();
+            // ConfidentialClientApplication handles it's own cache/renewal
+            if (_oAuthApplication == null || !(_oAuthApplication is ConfidentialClientApplication))
+                _oAuthApplication = ConfidentialClientApplicationBuilder.Create(ClientId)
+                    .WithAuthority(AzureCloudInstance.AzurePublic, TenantId)
+                    .WithCertificate(ClientCertificate)
+                    .Build();
 
             AuthenticationResult result = null;
             try

@@ -1,6 +1,6 @@
 ﻿namespace SyncFolderItemsSample
 {
-    partial class Form1
+    partial class FormMain
     {
         /// <summary>
         /// Required designer variable.
@@ -40,6 +40,7 @@
             this.label9 = new System.Windows.Forms.Label();
             this.comboBoxExchangeVersion = new System.Windows.Forms.ComboBox();
             this.groupBox2 = new System.Windows.Forms.GroupBox();
+            this.checkBoxShowMailboxViewer = new System.Windows.Forms.CheckBox();
             this.checkBoxDetectCopiedItems = new System.Windows.Forms.CheckBox();
             this.textBoxUniqueIdPropName = new System.Windows.Forms.TextBox();
             this.checkBoxAddCustomId = new System.Windows.Forms.CheckBox();
@@ -50,7 +51,6 @@
             this.buttonSyncNow = new System.Windows.Forms.Button();
             this.groupBox3 = new System.Windows.Forms.GroupBox();
             this.listBoxEvents = new System.Windows.Forms.ListBox();
-            this.timer1 = new System.Windows.Forms.Timer(this.components);
             this.groupBox4 = new System.Windows.Forms.GroupBox();
             this.radioButtonAuthOther = new System.Windows.Forms.RadioButton();
             this.buttonAcquireToken = new System.Windows.Forms.Button();
@@ -60,6 +60,7 @@
             this.label1 = new System.Windows.Forms.Label();
             this.textBoxPassword = new System.Windows.Forms.TextBox();
             this.textBoxUsername = new System.Windows.Forms.TextBox();
+            this.timerSync = new System.Windows.Forms.Timer(this.components);
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             this.groupBox3.SuspendLayout();
@@ -114,7 +115,7 @@
             this.textBoxEWSUrl.Name = "textBoxEWSUrl";
             this.textBoxEWSUrl.Size = new System.Drawing.Size(522, 20);
             this.textBoxEWSUrl.TabIndex = 22;
-            this.textBoxEWSUrl.Text = "https://cas1.e15.local/EWS/Exchange.asmx";
+            this.textBoxEWSUrl.Text = "https://e1.e19.local/EWS/Exchange.asmx";
             // 
             // radioButtonEwsUrl
             // 
@@ -185,6 +186,7 @@
             // 
             // groupBox2
             // 
+            this.groupBox2.Controls.Add(this.checkBoxShowMailboxViewer);
             this.groupBox2.Controls.Add(this.checkBoxDetectCopiedItems);
             this.groupBox2.Controls.Add(this.textBoxUniqueIdPropName);
             this.groupBox2.Controls.Add(this.checkBoxAddCustomId);
@@ -199,6 +201,18 @@
             this.groupBox2.TabIndex = 2;
             this.groupBox2.TabStop = false;
             this.groupBox2.Text = "Synchronisation";
+            // 
+            // checkBoxShowMailboxViewer
+            // 
+            this.checkBoxShowMailboxViewer.AutoSize = true;
+            this.checkBoxShowMailboxViewer.Checked = true;
+            this.checkBoxShowMailboxViewer.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.checkBoxShowMailboxViewer.Location = new System.Drawing.Point(449, 52);
+            this.checkBoxShowMailboxViewer.Name = "checkBoxShowMailboxViewer";
+            this.checkBoxShowMailboxViewer.Size = new System.Drawing.Size(195, 17);
+            this.checkBoxShowMailboxViewer.TabIndex = 8;
+            this.checkBoxShowMailboxViewer.Text = "Show Mailbox Viewer (experimental)";
+            this.checkBoxShowMailboxViewer.UseVisualStyleBackColor = true;
             // 
             // checkBoxDetectCopiedItems
             // 
@@ -236,6 +250,7 @@
             this.buttonStopTimedSync.TabIndex = 4;
             this.buttonStopTimedSync.Text = "Stop";
             this.buttonStopTimedSync.UseVisualStyleBackColor = true;
+            this.buttonStopTimedSync.Click += new System.EventHandler(this.buttonStopTimedSync_Click);
             // 
             // buttonStartTimedSync
             // 
@@ -264,7 +279,7 @@
             this.dtpSyncInterval.ShowUpDown = true;
             this.dtpSyncInterval.Size = new System.Drawing.Size(73, 20);
             this.dtpSyncInterval.TabIndex = 1;
-            this.dtpSyncInterval.Value = new System.DateTime(2014, 8, 7, 0, 0, 10, 0);
+            this.dtpSyncInterval.Value = new System.DateTime(2022, 11, 21, 0, 0, 30, 0);
             // 
             // buttonSyncNow
             // 
@@ -385,7 +400,12 @@
             this.textBoxUsername.Size = new System.Drawing.Size(99, 20);
             this.textBoxUsername.TabIndex = 4;
             // 
-            // Form1
+            // timerSync
+            // 
+            this.timerSync.Interval = 30000;
+            this.timerSync.Tick += new System.EventHandler(this.timerSync_Tick);
+            // 
+            // FormMain
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
@@ -397,7 +417,7 @@
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
             this.MaximizeBox = false;
             this.MinimizeBox = false;
-            this.Name = "Form1";
+            this.Name = "FormMain";
             this.Text = "SyncFolderItems Sample";
             this.groupBox1.ResumeLayout(false);
             this.groupBox1.PerformLayout();
@@ -426,7 +446,6 @@
         private System.Windows.Forms.Button buttonSyncNow;
         private System.Windows.Forms.GroupBox groupBox3;
         private System.Windows.Forms.ListBox listBoxEvents;
-        private System.Windows.Forms.Timer timer1;
         private System.Windows.Forms.RadioButton radioButtonUseAutodiscover;
         private System.Windows.Forms.TextBox textBoxEWSUrl;
         private System.Windows.Forms.RadioButton radioButtonEwsUrl;
@@ -443,6 +462,8 @@
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.TextBox textBoxPassword;
         private System.Windows.Forms.TextBox textBoxUsername;
+        private System.Windows.Forms.Timer timerSync;
+        private System.Windows.Forms.CheckBox checkBoxShowMailboxViewer;
     }
 }
 
