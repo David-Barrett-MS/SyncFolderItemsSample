@@ -75,8 +75,13 @@ namespace SyncFolderItemsSample
                 action();
         }
 
+        /// <summary>
+        /// Start the synchronisation process (continues on background thread)
+        /// </summary>
         private void StartSync()
         {
+            if (checkBoxClearLogFile.Checked && GetExchangeService())
+                _traceListener?.Clear();
             if (checkBoxShowMailboxViewer.Checked && _mailboxViewer == null)
             {
                 _mailboxViewer = new FormSyncViewer();
@@ -112,6 +117,10 @@ namespace SyncFolderItemsSample
             _service.ClientRequestId = Guid.NewGuid().ToString();
         }
 
+        /// <summary>
+        /// Try to obtain a valid ExchangeService object (will create as needed, and validates OAuth credentials)
+        /// </summary>
+        /// <returns>True if a valid ExchangeService object is available</returns>
         private bool GetExchangeService()
         {
             if (_service != null)
@@ -177,17 +186,33 @@ namespace SyncFolderItemsSample
             return true;
         }
 
+        /// <summary>
+        /// Return the currently selected Exchange version
+        /// </summary>
+        /// <returns></returns>
         private ExchangeVersion EWSVersion()
         {
             ExchangeVersion exchangeVersion = ExchangeVersion.Exchange2016;
-            try
+            Action action = new Action(() =>
             {
-                exchangeVersion = (ExchangeVersion)Enum.Parse(typeof(ExchangeVersion), comboBoxExchangeVersion.Text);
-            }
-            catch { }
+                try
+                {
+                    if (comboBoxExchangeVersion.SelectedIndex != -1)
+                        exchangeVersion = (ExchangeVersion)Enum.Parse(typeof(ExchangeVersion), comboBoxExchangeVersion.Text);
+                }
+                catch { }
+            });
+            if (comboBoxExchangeVersion.InvokeRequired)
+                comboBoxExchangeVersion.Invoke(action);
+            else
+                action();
             return exchangeVersion;
         }
 
+        /// <summary>
+        /// Update availability of Sync Now button
+        /// </summary>
+        /// <param name="Enable">True if button is enabled, false otherwise</param>
         private void ToggleSyncButtons(bool Enable)
         {
             if (buttonSyncNow.InvokeRequired)
@@ -201,6 +226,10 @@ namespace SyncFolderItemsSample
                 buttonSyncNow.Enabled = Enable;
         }
 
+        /// <summary>
+        /// Synchronise the mailbox
+        /// </summary>
+        /// <param name="e">Ignored</param>
         private void Synchronize(object e)
         {
             if (_amSyncing)
@@ -303,9 +332,11 @@ namespace SyncFolderItemsSample
             }
         }
 
+        /// <summary>
+        /// Iterate through all the folders and trigger a synchronisation
+        /// </summary>
         private void SyncFolders()
         {
-            // Process each folder in the heirarchy and sync
             List<string> folderIds = _folderSyncState.Keys.ToList<string>();
             foreach (string folderid in folderIds)
             {
@@ -313,6 +344,12 @@ namespace SyncFolderItemsSample
             }
         }
 
+        /// <summary>
+        /// Synchronise the specified folder
+        /// </summary>
+        /// <param name="folderId">Id of the folder to synchronise</param>
+        /// <param name="syncState">Previous SyncState</param>
+        /// <returns>New SyncState</returns>
         private string SyncFolder(string folderId, string syncState)
         {
             ChangeCollection<ItemChange> itemChangeCollection = null;
@@ -392,10 +429,14 @@ namespace SyncFolderItemsSample
                         {
                             if (ic.ChangeType != ChangeType.Delete)
                             {
-                                LogEvent($"Folder {folder.DisplayName}, Item {ic.Item.Subject}: {ic.ChangeType}");
+                                LogEvent($"Folder {folder.DisplayName}, Item {ic.Item?.Subject}: {ic.ChangeType}");
                             }
                             else
+                            {
+                                if (ic.Item != null && ic.Item.Id != null)
+                                    _mailboxViewer?.DeleteMessage(folderId, ic.Item.Id.UniqueId);
                                 LogEvent($"Folder {folder.DisplayName}, Item deleted: {ic.ItemId.UniqueId}");
+                            }
                         }
                     }
                     EventListBoxEndUpdate();

@@ -48,6 +48,24 @@ namespace SyncFolderItemsSample
                 catch { }
             }
         }
+
+        /// <summary>
+        /// Clear any existing trace data (wipes any file being written to)
+        /// </summary>
+        public void Clear()
+        {
+            if (String.IsNullOrEmpty(_traceFile))
+                return;
+
+            lock (_writeLock)
+            {
+
+                if (_traceStream != null)
+                    _traceStream.Close();
+
+                _traceStream = File.CreateText(_traceFile);
+            }
+        }
     }
 
 }

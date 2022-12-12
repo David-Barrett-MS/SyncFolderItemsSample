@@ -65,6 +65,16 @@ namespace SyncFolderItemsSample
             return true;
         }
 
+        public void DeleteMessage(string FolderId, string MessageId)
+        {
+            if (!_folderIdToNode.ContainsKey(FolderId) || _folderIdToNode[FolderId].Tag == null)
+                return;
+
+            Dictionary<string, string> folderMessages = (Dictionary<string, string>)_folderIdToNode[FolderId].Tag;
+            if (folderMessages.ContainsKey(MessageId))
+                folderMessages.Remove(MessageId);
+        }
+
         private void treeViewMailboxView_AfterSelect(object sender, TreeViewEventArgs e)
         {
             listBoxFolderMessages.Items.Clear();

@@ -61,6 +61,7 @@
             this.textBoxPassword = new System.Windows.Forms.TextBox();
             this.textBoxUsername = new System.Windows.Forms.TextBox();
             this.timerSync = new System.Windows.Forms.Timer(this.components);
+            this.checkBoxClearLogFile = new System.Windows.Forms.CheckBox();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             this.groupBox3.SuspendLayout();
@@ -186,6 +187,7 @@
             // 
             // groupBox2
             // 
+            this.groupBox2.Controls.Add(this.checkBoxClearLogFile);
             this.groupBox2.Controls.Add(this.checkBoxShowMailboxViewer);
             this.groupBox2.Controls.Add(this.checkBoxDetectCopiedItems);
             this.groupBox2.Controls.Add(this.textBoxUniqueIdPropName);
@@ -244,6 +246,7 @@
             // 
             // buttonStopTimedSync
             // 
+            this.buttonStopTimedSync.Enabled = false;
             this.buttonStopTimedSync.Location = new System.Drawing.Point(730, 19);
             this.buttonStopTimedSync.Name = "buttonStopTimedSync";
             this.buttonStopTimedSync.Size = new System.Drawing.Size(75, 23);
@@ -405,6 +408,18 @@
             this.timerSync.Interval = 30000;
             this.timerSync.Tick += new System.EventHandler(this.timerSync_Tick);
             // 
+            // checkBoxClearLogFile
+            // 
+            this.checkBoxClearLogFile.AutoSize = true;
+            this.checkBoxClearLogFile.Checked = true;
+            this.checkBoxClearLogFile.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.checkBoxClearLogFile.Location = new System.Drawing.Point(322, 52);
+            this.checkBoxClearLogFile.Name = "checkBoxClearLogFile";
+            this.checkBoxClearLogFile.Size = new System.Drawing.Size(121, 17);
+            this.checkBoxClearLogFile.TabIndex = 9;
+            this.checkBoxClearLogFile.Text = "Clear log file on start";
+            this.checkBoxClearLogFile.UseVisualStyleBackColor = true;
+            // 
             // FormMain
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -464,6 +479,7 @@
         private System.Windows.Forms.TextBox textBoxUsername;
         private System.Windows.Forms.Timer timerSync;
         private System.Windows.Forms.CheckBox checkBoxShowMailboxViewer;
+        private System.Windows.Forms.CheckBox checkBoxClearLogFile;
     }
 }
 
