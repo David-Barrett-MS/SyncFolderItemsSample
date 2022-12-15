@@ -1,5 +1,5 @@
 ﻿/*
- * By David Barrett, Microsoft Ltd. 2019. Use at your own risk.  No warranties are given.
+ * By David Barrett, Microsoft Ltd. 2022. Use at your own risk.  No warranties are given.
  * 
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
@@ -25,7 +25,7 @@ namespace SyncFolderItemsSample.Auth
         private AuthenticationResult _lastAuthResult = null;
         private OAuthHelper _oAuthHelper = new OAuthHelper();
         private TextBox _tokenTextBox = null;
-        private bool _tokenTaskRunning = false;
+        private bool _attemptingToAuthenticate = false;
 
         public FormAzureApplicationRegistration()
         {
@@ -34,6 +34,9 @@ namespace SyncFolderItemsSample.Auth
             UpdateAuthUI();
         }
 
+        /// <summary>
+        /// Most recent AuthenticationResult received
+        /// </summary>
         public AuthenticationResult LastAuthResult
         {
             get { return _lastAuthResult; }
@@ -63,15 +66,20 @@ namespace SyncFolderItemsSample.Auth
             get { return textBoxApplicationId.Text; }
         }
 
+        /// <summary>
+        /// The TextBox to which the token (or any error) will be written
+        /// </summary>
         public TextBox TokenTextBox
         {
             get { return _tokenTextBox; }
             set { _tokenTextBox = value; }
         }
 
+        /// <summary>
+        /// Update form controls based on current selection
+        /// </summary>
         private void UpdateAuthUI()
         {
-            // Native application does not authenticate
             bool authEnabled = !radioButtonAuthAsNativeApp.Checked;
             foreach (Control control in groupBoxAuth.Controls)
             {
@@ -88,10 +96,12 @@ namespace SyncFolderItemsSample.Auth
             }
         }
 
+        /// <summary>
+        /// Check app details to ensure we have valid configuration
+        /// </summary>
+        /// <returns>True if ready to request tokens, false otherwise</returns>
         public bool HaveValidAppConfig()
         {
-            // Return true if all the application information is present and valid
-
             StringBuilder sAppInfoErrors = new StringBuilder();
 
             if (String.IsNullOrEmpty(textBoxTenantId.Text)) { sAppInfoErrors.AppendLine("Tenant Id must be specified (e.g. tenant.onmicrosoft.com)"); }
@@ -114,54 +124,70 @@ namespace SyncFolderItemsSample.Auth
             return false;
         }
 
-        private void UpdateTokenTextbox()
+        /// <summary>
+        /// True if we are currently attempting to obtain a token, false otherwise
+        /// This is a very crude (bad) way to deal with async
+        /// </summary>
+        public bool Authenticating
         {
-            // If we have a textbox for the access token, update it with our current token
-            string tokenText = "Failed to retrieve token";
-            if (_lastAuthResult != null)
-                tokenText = _lastAuthResult.AccessToken;
-            else if (OAuthHelper.LastError != null)
-                tokenText = OAuthHelper.LastError.Message;
-            else if (_lastAuthResult == null)
-                tokenText = "Auth result is null";
-
-            if (_tokenTextBox == null)
-                return;
-            try
+            get
             {
-                if (_tokenTextBox.InvokeRequired)
-                {
-                    _tokenTextBox.Invoke(new MethodInvoker(delegate ()
-                    {
-                        _tokenTextBox.Text = tokenText;
-                    }));
-                }
-                else
-                    _tokenTextBox.Text = tokenText;
+                return _attemptingToAuthenticate;
             }
-            catch { }
         }
 
+        /// <summary>
+        /// Update the attached textbox with the token or the error obtained when retrieving.  If no text is provided, it is calculated
+        /// from the last auth result.
+        /// </summary>
+        /// <param name="tokenText">The text to be written to the textbox</param>
+        private void UpdateTokenTextbox(string tokenText = "")
+        {
+            if (_tokenTextBox == null)
+                return;
+
+            if (String.IsNullOrEmpty(tokenText))
+            {
+                tokenText = "Failed to retrieve token";
+                if (_lastAuthResult != null)
+                    tokenText = _lastAuthResult.AccessToken;
+                else if (OAuthHelper.LastError != null)
+                    tokenText = OAuthHelper.LastError.Message;
+                else if (_lastAuthResult == null)
+                    tokenText = "Auth result is null";
+            }
+
+            Action action = new Action(() =>
+            {
+                _tokenTextBox.Text = tokenText;
+            });
+            if (_tokenTextBox.InvokeRequired)
+                _tokenTextBox.Invoke(action);
+            else
+                action();
+        }
+
+        /// <summary>
+        /// Acquire token using native app flow (requires user interaction)
+        /// </summary>
+        /// <returns></returns>
         public void AcquireNativeAppToken()
         {
-            _tokenTaskRunning = true;
             Action action = new Action(async () =>
             {
                 try
                 {
-                    AuthenticationResult authenticationResult = await OAuthHelper.GetDelegateToken(textBoxApplicationId.Text, textBoxTenantId.Text);
-                    _lastAuthResult = authenticationResult;
+                    _lastAuthResult = await OAuthHelper.GetDelegateToken(textBoxApplicationId.Text, textBoxTenantId.Text);
+                    _attemptingToAuthenticate = false;
                     UpdateTokenTextbox();
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show(ex.Message, "Unable to acquire token", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    _attemptingToAuthenticate = false;
+                    UpdateTokenTextbox($"Unable to acquire token: {ex.Message}");
                 }
-                _tokenTaskRunning = false;
             });
             Task.Run(action);
-            while (_tokenTaskRunning)
-                Thread.Sleep(1000);
         }
 
         public void AcquireAppTokenWithSecret()
@@ -176,10 +202,11 @@ namespace SyncFolderItemsSample.Auth
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show(ex.Message, "Unable to acquire token", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    UpdateTokenTextbox($"Unable to acquire token: {ex.Message}");
                 }
+                _attemptingToAuthenticate = false;
             });
-            Task.Run(action).Wait();
+            Task.Run(action);
         }
 
         public void AcquireAppTokenWithCertificate()
@@ -194,14 +221,18 @@ namespace SyncFolderItemsSample.Auth
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show(ex.Message, "Unable to acquire token", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    UpdateTokenTextbox($"Unable to acquire token: {ex.Message}");
                 }
+                _attemptingToAuthenticate = false;
             });
-            Task.Run(action).Wait();
+            Task.Run(action);
         }
 
         public void AcquireToken()
         {
+            if (_attemptingToAuthenticate)
+                return;
+
             if (_lastAuthResult != null)
             {
                 if (_lastAuthResult.ExpiresOn > DateTime.Now)
@@ -219,6 +250,8 @@ namespace SyncFolderItemsSample.Auth
                 }
                 return;
             }
+
+            _attemptingToAuthenticate = true;
             if (radioButtonAuthAsNativeApp.Checked)
                 AcquireNativeAppToken();
             else if (radioButtonAuthWithClientSecret.Checked)

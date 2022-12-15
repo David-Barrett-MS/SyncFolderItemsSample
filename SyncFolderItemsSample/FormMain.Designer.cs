@@ -40,6 +40,7 @@
             this.label9 = new System.Windows.Forms.Label();
             this.comboBoxExchangeVersion = new System.Windows.Forms.ComboBox();
             this.groupBox2 = new System.Windows.Forms.GroupBox();
+            this.checkBoxClearLogFile = new System.Windows.Forms.CheckBox();
             this.checkBoxShowMailboxViewer = new System.Windows.Forms.CheckBox();
             this.checkBoxDetectCopiedItems = new System.Windows.Forms.CheckBox();
             this.textBoxUniqueIdPropName = new System.Windows.Forms.TextBox();
@@ -61,7 +62,9 @@
             this.textBoxPassword = new System.Windows.Forms.TextBox();
             this.textBoxUsername = new System.Windows.Forms.TextBox();
             this.timerSync = new System.Windows.Forms.Timer(this.components);
-            this.checkBoxClearLogFile = new System.Windows.Forms.CheckBox();
+            this.checkBoxQueryPidTagMessageFlags = new System.Windows.Forms.CheckBox();
+            this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
+            this.buttonOAuthAppRegistration = new System.Windows.Forms.Button();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             this.groupBox3.SuspendLayout();
@@ -187,6 +190,7 @@
             // 
             // groupBox2
             // 
+            this.groupBox2.Controls.Add(this.checkBoxQueryPidTagMessageFlags);
             this.groupBox2.Controls.Add(this.checkBoxClearLogFile);
             this.groupBox2.Controls.Add(this.checkBoxShowMailboxViewer);
             this.groupBox2.Controls.Add(this.checkBoxDetectCopiedItems);
@@ -199,21 +203,35 @@
             this.groupBox2.Controls.Add(this.buttonSyncNow);
             this.groupBox2.Location = new System.Drawing.Point(12, 155);
             this.groupBox2.Name = "groupBox2";
-            this.groupBox2.Size = new System.Drawing.Size(817, 77);
+            this.groupBox2.Size = new System.Drawing.Size(817, 102);
             this.groupBox2.TabIndex = 2;
             this.groupBox2.TabStop = false;
             this.groupBox2.Text = "Synchronisation";
+            // 
+            // checkBoxClearLogFile
+            // 
+            this.checkBoxClearLogFile.AutoSize = true;
+            this.checkBoxClearLogFile.Checked = true;
+            this.checkBoxClearLogFile.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.checkBoxClearLogFile.Location = new System.Drawing.Point(434, 52);
+            this.checkBoxClearLogFile.Name = "checkBoxClearLogFile";
+            this.checkBoxClearLogFile.Size = new System.Drawing.Size(121, 17);
+            this.checkBoxClearLogFile.TabIndex = 9;
+            this.checkBoxClearLogFile.Text = "Clear log file on start";
+            this.toolTip1.SetToolTip(this.checkBoxClearLogFile, "Clear the EWS trace log at first sync");
+            this.checkBoxClearLogFile.UseVisualStyleBackColor = true;
             // 
             // checkBoxShowMailboxViewer
             // 
             this.checkBoxShowMailboxViewer.AutoSize = true;
             this.checkBoxShowMailboxViewer.Checked = true;
             this.checkBoxShowMailboxViewer.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.checkBoxShowMailboxViewer.Location = new System.Drawing.Point(449, 52);
+            this.checkBoxShowMailboxViewer.Location = new System.Drawing.Point(561, 52);
             this.checkBoxShowMailboxViewer.Name = "checkBoxShowMailboxViewer";
-            this.checkBoxShowMailboxViewer.Size = new System.Drawing.Size(195, 17);
+            this.checkBoxShowMailboxViewer.Size = new System.Drawing.Size(127, 17);
             this.checkBoxShowMailboxViewer.TabIndex = 8;
-            this.checkBoxShowMailboxViewer.Text = "Show Mailbox Viewer (experimental)";
+            this.checkBoxShowMailboxViewer.Text = "Show Mailbox Viewer";
+            this.toolTip1.SetToolTip(this.checkBoxShowMailboxViewer, "Display the mailbox viewer");
             this.checkBoxShowMailboxViewer.UseVisualStyleBackColor = true;
             // 
             // checkBoxDetectCopiedItems
@@ -224,6 +242,8 @@
             this.checkBoxDetectCopiedItems.Size = new System.Drawing.Size(222, 17);
             this.checkBoxDetectCopiedItems.TabIndex = 7;
             this.checkBoxDetectCopiedItems.Text = "Detect copied items and ensure unique id";
+            this.toolTip1.SetToolTip(this.checkBoxDetectCopiedItems, "Ensures that the custom property remains unique if an item is copied within a mai" +
+        "lbox");
             this.checkBoxDetectCopiedItems.UseVisualStyleBackColor = true;
             // 
             // textBoxUniqueIdPropName
@@ -242,6 +262,8 @@
             this.checkBoxAddCustomId.Size = new System.Drawing.Size(195, 17);
             this.checkBoxAddCustomId.TabIndex = 5;
             this.checkBoxAddCustomId.Text = "Add custom property with unique Id:";
+            this.toolTip1.SetToolTip(this.checkBoxAddCustomId, "Add custom property with unique value to track whether we have seen this item bef" +
+        "ore");
             this.checkBoxAddCustomId.UseVisualStyleBackColor = true;
             // 
             // buttonStopTimedSync
@@ -297,9 +319,9 @@
             // groupBox3
             // 
             this.groupBox3.Controls.Add(this.listBoxEvents);
-            this.groupBox3.Location = new System.Drawing.Point(12, 238);
+            this.groupBox3.Location = new System.Drawing.Point(12, 263);
             this.groupBox3.Name = "groupBox3";
-            this.groupBox3.Size = new System.Drawing.Size(817, 279);
+            this.groupBox3.Size = new System.Drawing.Size(817, 254);
             this.groupBox3.TabIndex = 3;
             this.groupBox3.TabStop = false;
             this.groupBox3.Text = "Events";
@@ -310,11 +332,13 @@
             this.listBoxEvents.FormattingEnabled = true;
             this.listBoxEvents.Location = new System.Drawing.Point(3, 16);
             this.listBoxEvents.Name = "listBoxEvents";
-            this.listBoxEvents.Size = new System.Drawing.Size(811, 260);
+            this.listBoxEvents.Size = new System.Drawing.Size(811, 235);
             this.listBoxEvents.TabIndex = 0;
+            this.listBoxEvents.DoubleClick += new System.EventHandler(this.listBoxEvents_DoubleClick);
             // 
             // groupBox4
             // 
+            this.groupBox4.Controls.Add(this.buttonOAuthAppRegistration);
             this.groupBox4.Controls.Add(this.radioButtonAuthOther);
             this.groupBox4.Controls.Add(this.buttonAcquireToken);
             this.groupBox4.Controls.Add(this.textBoxOAuthToken);
@@ -343,9 +367,9 @@
             // 
             // buttonAcquireToken
             // 
-            this.buttonAcquireToken.Location = new System.Drawing.Point(304, 14);
+            this.buttonAcquireToken.Location = new System.Drawing.Point(270, 14);
             this.buttonAcquireToken.Name = "buttonAcquireToken";
-            this.buttonAcquireToken.Size = new System.Drawing.Size(92, 23);
+            this.buttonAcquireToken.Size = new System.Drawing.Size(85, 23);
             this.buttonAcquireToken.TabIndex = 10;
             this.buttonAcquireToken.Text = "Acquire Token";
             this.buttonAcquireToken.UseVisualStyleBackColor = true;
@@ -355,8 +379,10 @@
             // 
             this.textBoxOAuthToken.Location = new System.Drawing.Point(70, 16);
             this.textBoxOAuthToken.Name = "textBoxOAuthToken";
-            this.textBoxOAuthToken.Size = new System.Drawing.Size(228, 20);
+            this.textBoxOAuthToken.Size = new System.Drawing.Size(194, 20);
             this.textBoxOAuthToken.TabIndex = 9;
+            this.toolTip1.SetToolTip(this.textBoxOAuthToken, "OAuth token - will be populated automatically on token retrieval\r\n(or error respo" +
+        "nse in case of failure)");
             // 
             // radioButtonOAuth
             // 
@@ -408,17 +434,27 @@
             this.timerSync.Interval = 30000;
             this.timerSync.Tick += new System.EventHandler(this.timerSync_Tick);
             // 
-            // checkBoxClearLogFile
+            // checkBoxQueryPidTagMessageFlags
             // 
-            this.checkBoxClearLogFile.AutoSize = true;
-            this.checkBoxClearLogFile.Checked = true;
-            this.checkBoxClearLogFile.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.checkBoxClearLogFile.Location = new System.Drawing.Point(322, 52);
-            this.checkBoxClearLogFile.Name = "checkBoxClearLogFile";
-            this.checkBoxClearLogFile.Size = new System.Drawing.Size(121, 17);
-            this.checkBoxClearLogFile.TabIndex = 9;
-            this.checkBoxClearLogFile.Text = "Clear log file on start";
-            this.checkBoxClearLogFile.UseVisualStyleBackColor = true;
+            this.checkBoxQueryPidTagMessageFlags.AutoSize = true;
+            this.checkBoxQueryPidTagMessageFlags.Location = new System.Drawing.Point(6, 69);
+            this.checkBoxQueryPidTagMessageFlags.Name = "checkBoxQueryPidTagMessageFlags";
+            this.checkBoxQueryPidTagMessageFlags.Size = new System.Drawing.Size(226, 17);
+            this.checkBoxQueryPidTagMessageFlags.TabIndex = 10;
+            this.checkBoxQueryPidTagMessageFlags.Text = "Query PidTagMessageFlags mfUnmodified";
+            this.toolTip1.SetToolTip(this.checkBoxQueryPidTagMessageFlags, "mfUnmodified can be used to detect if message has changed since it was received (" +
+        "or sent)");
+            this.checkBoxQueryPidTagMessageFlags.UseVisualStyleBackColor = true;
+            // 
+            // buttonOAuthAppRegistration
+            // 
+            this.buttonOAuthAppRegistration.Location = new System.Drawing.Point(361, 14);
+            this.buttonOAuthAppRegistration.Name = "buttonOAuthAppRegistration";
+            this.buttonOAuthAppRegistration.Size = new System.Drawing.Size(61, 23);
+            this.buttonOAuthAppRegistration.TabIndex = 12;
+            this.buttonOAuthAppRegistration.Text = "App reg...";
+            this.buttonOAuthAppRegistration.UseVisualStyleBackColor = true;
+            this.buttonOAuthAppRegistration.Click += new System.EventHandler(this.buttonOAuthAppRegistration_Click);
             // 
             // FormMain
             // 
@@ -480,6 +516,9 @@
         private System.Windows.Forms.Timer timerSync;
         private System.Windows.Forms.CheckBox checkBoxShowMailboxViewer;
         private System.Windows.Forms.CheckBox checkBoxClearLogFile;
+        private System.Windows.Forms.CheckBox checkBoxQueryPidTagMessageFlags;
+        private System.Windows.Forms.ToolTip toolTip1;
+        private System.Windows.Forms.Button buttonOAuthAppRegistration;
     }
 }
 

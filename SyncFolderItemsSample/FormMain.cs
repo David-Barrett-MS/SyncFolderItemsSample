@@ -1,14 +1,20 @@
-﻿using System;
+﻿/*
+ * By David Barrett, Microsoft Ltd. 2022. Use at your own risk.  No warranties are given.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ * */
+
+using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 using Microsoft.Exchange.WebServices.Data;
-using System.Net;
 using System.Threading;
 
 namespace SyncFolderItemsSample
@@ -21,35 +27,57 @@ namespace SyncFolderItemsSample
         private Dictionary<string, string> _folderSyncState = new Dictionary<string, string>();
         private Auth.FormAzureApplicationRegistration _oAuthAppRegForm = null;
         private Auth.CredentialHandler _credentialHandler = null;
+        /// <summary>
+        /// Trace listener used to capture EWS calls (thread safe)
+        /// </summary>
         private ClassTraceListener _traceListener = null;
+        /// <summary>
+        /// Set to true when synchronisation is active (to ensure we don't trigger more than one sync process at the same time)
+        /// </summary>
         private bool _amSyncing = false;
+        /// <summary>
+        /// When true, the current synchronisation is the first (i.e. to get the current contents of the mailbox)
+        /// </summary>
+        private bool _firstSync = true;
         private FormSyncViewer _mailboxViewer = null;
+        List<System.Threading.Tasks.Task> _backGroundEWSTasks = new List<System.Threading.Tasks.Task>();
+
+        private ExtendedPropertyDefinition PidTagMessageFlags = new ExtendedPropertyDefinition(0xE07, MapiPropertyType.Integer);
+
 
         public FormMain()
         {
             InitializeComponent();
             //ServicePointManager.ServerCertificateValidationCallback += (sender, cert, chain, sslPolicyErrors) => true;
             _oAuthAppRegForm = new Auth.FormAzureApplicationRegistration();
+            _oAuthAppRegForm.TokenTextBox = textBoxOAuthToken;
         }
 
+        /// <summary>
+        /// Add the given event to the Events listbox.  If more than 1000 events already displayed, the oldest one will be removed.
+        /// </summary>
+        /// <param name="eventDescription">Event to be added</param>
         private void LogEvent(string eventDescription)
         {
             string log = String.Format("{0:H:mm:ss}: {1}", DateTime.Now, eventDescription);
-            if (listBoxEvents.InvokeRequired)
+
+            Action action = new Action(() =>
             {
-                listBoxEvents.Invoke(new MethodInvoker(delegate()
-                {
-                    listBoxEvents.Items.Add(log);
-                    listBoxEvents.SelectedIndex = listBoxEvents.Items.Count - 1;
-                }));
-            }
-            else
-            {
+                if (listBoxEvents.Items.Count > 1000)
+                    listBoxEvents.Items.RemoveAt(0);
                 listBoxEvents.Items.Add(log);
-                listBoxEvents.SelectedIndex = listBoxEvents.Items.Count - 1;
-            }
+                if (listBoxEvents.SelectedIndex < 0)
+                    listBoxEvents.TopIndex = listBoxEvents.Items.Count - 1;
+            });
+            if (listBoxEvents.InvokeRequired)
+                listBoxEvents.Invoke(action);
+            else
+                action();
         }
 
+        /// <summary>
+        /// Call listBoxEvents.BeginUpdate() (invoking as required)
+        /// </summary>
         private void EventListBoxBeginUpdate()
         {
             Action action = new Action(() =>
@@ -62,6 +90,9 @@ namespace SyncFolderItemsSample
                 action();
         }
 
+        /// <summary>
+        /// Call listBoxEvents.EndUpdate() (invoking as required)
+        /// </summary>
         private void EventListBoxEndUpdate()
         {
             Action action = new Action(() =>
@@ -80,7 +111,7 @@ namespace SyncFolderItemsSample
         /// </summary>
         private void StartSync()
         {
-            if (checkBoxClearLogFile.Checked && GetExchangeService())
+            if (checkBoxClearLogFile.Checked && String.IsNullOrEmpty(_folderHeirarchySyncState))
                 _traceListener?.Clear();
             if (checkBoxShowMailboxViewer.Checked && _mailboxViewer == null)
             {
@@ -96,9 +127,10 @@ namespace SyncFolderItemsSample
             StartSync();
         }
 
-        private bool InitCredentialHandler()
+        private bool InitCredentialHandler(bool Reset = false)
         {
-            _credentialHandler = null;
+            if (Reset)
+                _credentialHandler = null;
             if (radioButtonAuthOther.Checked)
             {
                 _credentialHandler = new Auth.CredentialHandler(Auth.AuthType.Basic);
@@ -118,6 +150,66 @@ namespace SyncFolderItemsSample
         }
 
         /// <summary>
+        /// Create an ExchangeService object with the currently selected settings (Auth, etc.).
+        /// Always returns a new ExchangeService object, so can be used on a new thread
+        /// </summary>
+        /// <returns>ExchangeService object configured to send requests, or null if creation failed.</returns>
+        private ExchangeService CreateExchangeService()
+        {
+            ExchangeService service = new ExchangeService();
+            try
+            {
+                if (!InitCredentialHandler())
+                    return null;
+                service = new ExchangeService(EWSVersion());
+                if (!_credentialHandler.ApplyCredentialsToExchangeService(service))
+                    return null;
+                if (checkBoxImpersonate.Checked)
+                    service.ImpersonatedUserId = new ImpersonatedUserId(ConnectingIdType.SmtpAddress, textBoxMailbox.Text);
+            }
+            catch (Exception ex)
+            {
+                LogEvent(String.Format("Failed to instantiate Exchange service: {0}", ex.Message));
+                return null;
+            }
+
+            // Attach trace listener
+            if (_traceListener == null)
+                _traceListener = new ClassTraceListener($"{Application.ProductName}.log");
+            service.TraceListener = _traceListener;
+            service.TraceFlags = TraceFlags.All;
+            service.TraceEnabled = true;
+
+            // Enable instrumentation
+            service.ReturnClientRequestId = true;
+
+            // Now perform autodiscover (if needed)
+            if (radioButtonEwsUrl.Checked)
+                service.Url = new Uri(textBoxEWSUrl.Text);
+            else if (radioButtonOffice365.Checked)
+                service.Url = new Uri("https://outlook.office365.com/EWS/Exchange.asmx");
+            else
+            {
+                if (_autodiscoverCache.ContainsKey(textBoxMailbox.Text))
+                    service.Url = new Uri(_autodiscoverCache[textBoxMailbox.Text]);
+                else
+                {
+                    try
+                    {
+                        service.AutodiscoverUrl(textBoxMailbox.Text);
+                    }
+                    catch (Exception ex)
+                    {
+                        LogEvent(String.Format("Autodiscover for {0} failed: {1}", textBoxMailbox.Text, ex.Message));
+                        return null;
+                    }
+                    _autodiscoverCache.Add(textBoxMailbox.Text, _service.Url.AbsoluteUri);
+                }
+            }
+            return service;
+        }
+
+        /// <summary>
         /// Try to obtain a valid ExchangeService object (will create as needed, and validates OAuth credentials)
         /// </summary>
         /// <returns>True if a valid ExchangeService object is available</returns>
@@ -129,61 +221,8 @@ namespace SyncFolderItemsSample
                 return true;
             }
 
-            try
-            {
-                if (!InitCredentialHandler())
-                    return false;
-                _service = new ExchangeService(EWSVersion());
-                _credentialHandler.ApplyCredentialsToExchangeService(_service);
-                if (checkBoxImpersonate.Checked)
-                    _service.ImpersonatedUserId = new ImpersonatedUserId(ConnectingIdType.SmtpAddress, textBoxMailbox.Text);
-            }
-            catch (Exception ex)
-            {
-                LogEvent(String.Format("Failed to instantiate Exchange service: {0}", ex.Message));
-                return false;
-            }
-
-            // Attach trace listener
-            if (_traceListener == null)
-                _traceListener = new ClassTraceListener($"{Application.ProductName}.log");
-            _service.TraceListener = _traceListener;
-            _service.TraceFlags = TraceFlags.All;
-            _service.TraceEnabled = true;
-
-            // Enable instrumentation
-            _service.ReturnClientRequestId = true;
-
-            // Now perform autodiscover (if needed)
-            if (radioButtonEwsUrl.Checked)
-            {
-                _service.Url = new Uri(textBoxEWSUrl.Text);
-                return true;
-            }
-            if (radioButtonOffice365.Checked)
-            {
-                _service.Url = new Uri("https://outlook.office365.com/EWS/Exchange.asmx");
-                return true;
-            }
-
-            if (_autodiscoverCache.ContainsKey(textBoxMailbox.Text))
-            {
-                _service.Url = new Uri(_autodiscoverCache[textBoxMailbox.Text]);
-                return true;
-            }
-
-            try
-            {
-                _service.AutodiscoverUrl(textBoxMailbox.Text);
-            }
-            catch (Exception ex)
-            {
-                LogEvent(String.Format("Autodiscover for {0} failed: {1}", textBoxMailbox.Text, ex.Message));
-                _service = null;
-                return false;
-            }
-            _autodiscoverCache.Add(textBoxMailbox.Text, _service.Url.AbsoluteUri);
-            return true;
+            _service = CreateExchangeService();
+            return (_service != null);
         }
 
         /// <summary>
@@ -265,6 +304,8 @@ namespace SyncFolderItemsSample
                 return;
             }
 
+            ExtendedPropertyDefinition PidTagAttributeHidden = new ExtendedPropertyDefinition(0x10f4, MapiPropertyType.Boolean);
+
             while (bMoreEvents)
             {
                 ChangeCollection<FolderChange> folderChangeCollection;
@@ -273,7 +314,7 @@ namespace SyncFolderItemsSample
                     _credentialHandler.UpdateOAuthCredentialsForExchangeService(_service);
                     SetClientRequestId();
                     folderChangeCollection = _service.SyncFolderHierarchy(new FolderId(WellKnownFolderName.MsgFolderRoot),
-                        new PropertySet(BasePropertySet.IdOnly, FolderSchema.DisplayName, FolderSchema.ParentFolderId),
+                        new PropertySet(BasePropertySet.IdOnly, FolderSchema.DisplayName, FolderSchema.ParentFolderId, PidTagAttributeHidden),
                         _folderHeirarchySyncState);
                 }
                 catch (Exception ex)
@@ -283,31 +324,56 @@ namespace SyncFolderItemsSample
                 }
                 _folderHeirarchySyncState = folderChangeCollection.SyncState;
 
-                // Display changes, if any. Note that instead of displaying the changes, 
-                // you can create, update, or delete folders based on the changes retrieved from the server. 
+                // Process any changes (in case of first sync, we receive a Create event for each folder).
                 if (folderChangeCollection.Count != 0)
                 {
                     EventListBoxBeginUpdate();
                     foreach (FolderChange fc in folderChangeCollection)
                     {
-                        LogEvent(String.Format("Folder {0}: {1}", fc.Folder.DisplayName, fc.ChangeType.ToString()));
-                        switch (fc.ChangeType)
-                        {
-                            case ChangeType.Create:
+                        // We aren't interested in any hidden folders (the user can't see these, and usually they contain configuration information for Exchange or mail clients)
+                        bool isFolderHidden = false;
+                        if (fc.Folder?.ExtendedProperties.Count>0)
+                            foreach (ExtendedProperty prop in fc.Folder.ExtendedProperties)
+                                if (prop.PropertyDefinition==PidTagAttributeHidden)
                                 {
-                                    _folderSyncState.Add(fc.Folder.Id.UniqueId, null);
-                                    _mailboxViewer?.AddFolder(fc.Folder.Id.UniqueId, fc.Folder.ParentFolderId.UniqueId, fc.Folder.DisplayName);
-                                    break;
+                                    isFolderHidden = (bool)prop.Value;
                                 }
 
-                            case ChangeType.Delete:
-                                {
-                                    if (_folderSyncState.ContainsKey(fc.FolderId.UniqueId))
+                        if (isFolderHidden)
+                            LogEvent($"Hidden folder {fc.Folder?.DisplayName}: {fc.ChangeType} (will not be tracked)");
+                        else
+                        {
+                            switch (fc.ChangeType)
+                            {
+                                case ChangeType.Create:
                                     {
-                                        _folderSyncState.Remove(fc.FolderId.UniqueId);
+                                        _folderSyncState.Add(fc.Folder.Id.UniqueId, null);
+                                        _mailboxViewer?.AddFolder(fc.Folder.Id.UniqueId, fc.Folder.ParentFolderId.UniqueId, fc.Folder.DisplayName);
+                                        LogEvent($"Folder {fc.Folder.DisplayName}: {fc.ChangeType}");
+                                        break;
                                     }
-                                    break;
-                                }
+
+                                case ChangeType.Delete:
+                                    {
+                                        string folderName = fc.FolderId.UniqueId;
+                                        if (_mailboxViewer != null)
+                                        {
+                                            folderName = _mailboxViewer.FolderNameFromId(folderName);
+                                            _mailboxViewer.DeleteFolder(fc.FolderId.UniqueId);
+                                        }
+                                        if (_folderSyncState.ContainsKey(fc.FolderId.UniqueId))
+                                            _folderSyncState.Remove(fc.FolderId.UniqueId);
+                                        LogEvent($"Folder {folderName}: {fc.ChangeType}");
+                                        break;
+                                    }
+
+                                case ChangeType.Update:
+                                    {
+                                        _mailboxViewer?.UpdateFolder(fc.Folder.Id.UniqueId, fc.Folder.ParentFolderId.UniqueId, fc.Folder.DisplayName);
+                                        LogEvent($"Folder {fc.Folder.DisplayName}: {fc.ChangeType}");
+                                        break;
+                                    }
+                            }
                         }
                     }
                     EventListBoxEndUpdate();
@@ -317,6 +383,7 @@ namespace SyncFolderItemsSample
 
             SyncFolders();
             LogEvent("Synchronisation complete");
+            _firstSync = false;
             ToggleSyncButtons(true);
             _amSyncing = false;
             if (buttonStopTimedSync.Enabled)
@@ -345,6 +412,96 @@ namespace SyncFolderItemsSample
         }
 
         /// <summary>
+        /// Process the given ItemChange Create event
+        /// </summary>
+        /// <param name="folder">Folder to which this item change applied</param>
+        /// <param name="itemChange">Item change information</param>
+        private void ProcessItemCreate(Folder folder, ItemChange itemChange)
+        {
+            _mailboxViewer?.AddMessage(folder.Id.UniqueId, itemChange.Item.Id.UniqueId, itemChange.Item.Subject);
+
+            if (checkBoxAddCustomId.Checked)
+            {
+                Action action = new Action(() =>
+                {
+                    // We add a custom Id to each item the first time we see it (so that we know if we've seen it before/already synchronised).
+                    // In the context of this sample, this isn't useful as we don't persist the data anywhere.
+                    // This sample creates a named property in the PublicStrings namespace.
+                    ExchangeService service = CreateExchangeService();
+                    ExtendedPropertyDefinition propId = new ExtendedPropertyDefinition(DefaultExtendedPropertySet.PublicStrings, textBoxUniqueIdPropName.Text, MapiPropertyType.String);
+                    try
+                    {
+                        Item item = Item.Bind(service, itemChange.ItemId, new PropertySet(BasePropertySet.IdOnly, propId));
+                        bool bApplyId = true;
+
+                        if (item.ExtendedProperties.Count > 0)
+                        {
+                            if (!_firstSync && checkBoxDetectCopiedItems.Checked)
+                            {
+                                // This is a copy, delete the existing Id
+                                LogEvent($"Folder {folder.DisplayName}, Item {itemChange.Item.Subject}: Copy (updating tracking info){ReportMessageFlagUnmodified(itemChange.Item)}");
+                            }
+                            else
+                            {
+                                bApplyId = false;
+                                LogEvent($"Folder {folder.DisplayName}, Item {itemChange.Item.Subject}: Create (already tracked){ReportMessageFlagUnmodified(itemChange.Item)}");
+                            }
+                        }
+                        else
+                            LogEvent($"Folder {folder.DisplayName}, Item {itemChange.Item.Subject}: Create (new item, adding tracking info){ReportMessageFlagUnmodified(itemChange.Item)}");
+
+                        // Create new Id and apply to item
+                        if (bApplyId)
+                        {
+                            string sId = DateTime.Now.Ticks.ToString();
+                            item.SetExtendedProperty(propId, sId);
+                            _credentialHandler.UpdateOAuthCredentialsForExchangeService(service);
+                            SetClientRequestId();
+                            // Note that writing the property will trigger a ChangeType.Update event in the next sync for this folder (as we have updated the item)
+                            item.Update(ConflictResolutionMode.AlwaysOverwrite);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        LogEvent($"Folder {folder.DisplayName}, Item {itemChange.Item.Subject}: Create - unexpected error: {ex.Message} ");
+                    }
+
+                });
+
+                // This is a very crude way to update the property on a background thread.  More than 3 threads could hit concurrency throttling.
+                _backGroundEWSTasks.Add(System.Threading.Tasks.Task.Run(() => action()));
+            }
+            else
+                LogEvent($"Folder {folder.DisplayName}, Item {itemChange.Item.Subject}: Create{ReportMessageFlagUnmodified(itemChange.Item)}");
+
+        }
+
+        /// <summary>
+        /// Check the item and report if MSGFLAG_UNMODIFIED is set
+        /// </summary>
+        /// <param name="item">The item to check message flags for (message flags must be present)</param>
+        private string ReportMessageFlagUnmodified(Item item)
+        {
+            if (checkBoxQueryPidTagMessageFlags.Checked)
+            {
+                bool itemIsUnmodified = false;
+                if (item.ExtendedProperties.Count > 0)
+                {
+                    // Check MSGFLAG_UNMODIFIED (0x00000002)
+                    foreach (ExtendedProperty prop in item.ExtendedProperties)
+                        if (prop.PropertyDefinition == PidTagMessageFlags)
+                        {
+                            itemIsUnmodified = (((int)prop.Value) & 0x00000002) == 0x00000002;
+                            break;
+                        }
+                }
+                if (itemIsUnmodified)
+                    return " (mfUnmodified)";
+            }
+            return String.Empty;
+        }
+
+        /// <summary>
         /// Synchronise the specified folder
         /// </summary>
         /// <param name="folderId">Id of the folder to synchronise</param>
@@ -357,7 +514,12 @@ namespace SyncFolderItemsSample
             _credentialHandler.UpdateOAuthCredentialsForExchangeService(_service);
             SetClientRequestId();
             Folder folder = Folder.Bind(_service, new FolderId(folderId), new PropertySet(BasePropertySet.IdOnly, FolderSchema.DisplayName));
-            PropertySet itemProperties = new PropertySet(BasePropertySet.IdOnly, ItemSchema.Subject);
+
+            // We can use PidTagMessageFlags to determine if the contents of the message have been updated:
+            // https://learn.microsoft.com/fi-fi/openspecs/exchange_server_protocols/ms-oxcmsg/a0c52fe2-3014-43a7-942d-f43f6f91c366
+            // mfUnmodified
+            // The message has not been modified since it was first saved (if unsent) or it was delivered (if sent).
+            PropertySet itemProperties = new PropertySet(BasePropertySet.IdOnly, ItemSchema.Subject, PidTagMessageFlags);
 
             while (bMoreEvents)
             {
@@ -370,7 +532,7 @@ namespace SyncFolderItemsSample
                 }
                 catch (Exception ex)
                 {
-                    LogEvent(String.Format("Error calling SyncFolderItems: {0}", ex.Message));
+                    LogEvent($"Error calling SyncFolderItems: {ex.Message}");
                     return syncState;
                 }
                 if (itemChangeCollection.Count != 0)
@@ -378,70 +540,51 @@ namespace SyncFolderItemsSample
                     EventListBoxBeginUpdate();
                     foreach (ItemChange ic in itemChangeCollection)
                     {
-                        if (ic.ChangeType == ChangeType.Create)
+                        switch (ic.ChangeType)
                         {
-                            _mailboxViewer?.AddMessage(folderId, ic.Item.Id.UniqueId, ic.Item.Subject);
-                            if (checkBoxAddCustomId.Checked)
-                            {
-                                // Item was created.  Check if it has our Id on it (if it does, it was a copy and we need to assign a new Id)
-                                ExtendedPropertyDefinition propId = new ExtendedPropertyDefinition(DefaultExtendedPropertySet.PublicStrings, textBoxUniqueIdPropName.Text, MapiPropertyType.String);
-                                try
+                            case ChangeType.Create:
                                 {
-                                    _credentialHandler.UpdateOAuthCredentialsForExchangeService(_service);
-                                    Item item = Item.Bind(_service, ic.ItemId, new PropertySet(BasePropertySet.IdOnly, propId));
-                                    bool bApplyId = true;
-
-                                    if (item.ExtendedProperties.Count > 0)
-                                    {
-                                        if (checkBoxDetectCopiedItems.Checked)
-                                        {
-                                            // This is a copy, delete the existing Id
-                                            LogEvent(String.Format("Folder {0}, Item {1}: Copy", folder.DisplayName, ic.Item.Subject));
-                                        }
-                                        else
-                                        {
-                                            bApplyId = false;
-                                            LogEvent(String.Format("Folder {0}, Item {1}: Create", folder.DisplayName, ic.Item.Subject));
-                                        }
-                                    }
-                                    else
-                                        LogEvent(String.Format("Folder {0}, Item {1}: Create", folder.DisplayName, ic.Item.Subject));
-
-                                    // Create new Id and apply to item
-                                    if (bApplyId)
-                                    {
-                                        string sId = DateTime.Now.Ticks.ToString();
-                                        item.SetExtendedProperty(propId, sId);
-                                        _credentialHandler.UpdateOAuthCredentialsForExchangeService(_service);
-                                        SetClientRequestId();
-                                        item.Update(ConflictResolutionMode.AlwaysOverwrite);
-                                    }
+                                    ProcessItemCreate(folder, ic);
+                                    break;
                                 }
-                                catch (Exception ex)
+
+                            case ChangeType.Update:
                                 {
-                                    LogEvent($"Folder {folder.DisplayName}, Item {ic.Item.Subject}: Create - unexpected error: {ex.Message} ");
+                                    LogEvent($"Folder {folder.DisplayName}, Item {ic.Item?.Subject}: Update{ReportMessageFlagUnmodified(ic.Item)}");
+                                    
+                                    _mailboxViewer?.UpdateMessage(folderId, ic.Item.Id.UniqueId, ic.Item.Subject);
+                                    break;
                                 }
-                            }
-                            else
-                                LogEvent($"Folder {folder.DisplayName}, Item {ic.Item.Subject}: Create");
-                        }
-                        else
-                        {
-                            if (ic.ChangeType != ChangeType.Delete)
-                            {
-                                LogEvent($"Folder {folder.DisplayName}, Item {ic.Item?.Subject}: {ic.ChangeType}");
-                            }
-                            else
-                            {
-                                if (ic.Item != null && ic.Item.Id != null)
-                                    _mailboxViewer?.DeleteMessage(folderId, ic.Item.Id.UniqueId);
-                                LogEvent($"Folder {folder.DisplayName}, Item deleted: {ic.ItemId.UniqueId}");
-                            }
+
+                            case ChangeType.Delete:
+                                {
+                                    if (ic.Item != null && ic.Item.Id != null)
+                                        _mailboxViewer?.DeleteMessage(folderId, ic.Item.Id.UniqueId);
+                                    LogEvent($"Folder {folder.DisplayName}, Item deleted: {ic.ItemId.UniqueId}");
+                                    break;
+                                }
+
+                            default:
+                                {
+                                    LogEvent($"Folder {folder.DisplayName}, Item {ic.Item?.Subject}: {ic.ChangeType}");
+                                    break;
+                                }
                         }
                     }
                     EventListBoxEndUpdate();
                 }
                 bMoreEvents = itemChangeCollection.MoreChangesAvailable;                
+            }
+
+            if (_backGroundEWSTasks.Count>0)
+            {
+                // Wait for any background EWS tasks to finish before moving onto next folder
+                while (_backGroundEWSTasks.Count > 0)
+                {
+                    while (_backGroundEWSTasks[0].Status == System.Threading.Tasks.TaskStatus.Running || _backGroundEWSTasks[0].Status == System.Threading.Tasks.TaskStatus.WaitingToRun)
+                        Thread.Yield();
+                    _backGroundEWSTasks.RemoveAt(0);
+                }
             }
             return syncState;
         }
@@ -515,6 +658,22 @@ namespace SyncFolderItemsSample
             buttonStopTimedSync.Enabled = false;
             buttonStartTimedSync.Enabled = true;
             timerSync.Stop();
+        }
+
+        private void listBoxEvents_DoubleClick(object sender, EventArgs e)
+        {
+            if (listBoxEvents.SelectedIndex < 0 || listBoxEvents.SelectedItems.Count > 1)
+                return;
+
+            if (MessageBox.Show(this, listBoxEvents.Items[listBoxEvents.SelectedIndex].ToString(), "Event information", MessageBoxButtons.OKCancel, MessageBoxIcon.Information) == DialogResult.Cancel)
+                listBoxEvents.SelectedIndex = -1;
+        }
+
+        private void buttonOAuthAppRegistration_Click(object sender, EventArgs e)
+        {
+            _oAuthAppRegForm.TokenTextBox = textBoxOAuthToken; // So that the app reg form knows where to send any acquired tokens
+            _oAuthAppRegForm.ShowDialog(this);
+            this.Activate();
         }
     }
 }

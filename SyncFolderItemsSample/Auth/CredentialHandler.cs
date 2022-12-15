@@ -95,7 +95,11 @@ namespace SyncFolderItemsSample.Auth
                     // Check if we already have valid access token
                     if (_oAuthAppRegForm.LastAuthResult != null && _oAuthAppRegForm.LastAuthResult.ExpiresOn > DateTime.Now) return true;
                     if (_oAuthAppRegForm.HaveValidAppConfig())
-                        AcquireToken();
+                    {
+                        _oAuthAppRegForm.AcquireToken();
+                        while (_oAuthAppRegForm.Authenticating)
+                            System.Threading.Tasks.Task.Yield();
+                    }
                     if (_oAuthAppRegForm.LastAuthResult != null && _oAuthAppRegForm.LastAuthResult.ExpiresOn > DateTime.Now) return true;
                     return false;
 
@@ -137,7 +141,10 @@ namespace SyncFolderItemsSample.Auth
                 return;
             if (_oAuthAppRegForm.LastAuthResult?.ExpiresOn > DateTime.Now) return;
             _oAuthAppRegForm.AcquireToken();
-            Exchange.Credentials = new OAuthCredentials(_oAuthAppRegForm.LastAuthResult.AccessToken);
+            while (_oAuthAppRegForm.Authenticating)
+                System.Threading.Tasks.Task.Yield();
+            if (_oAuthAppRegForm.AccessToken != null)
+                Exchange.Credentials = new OAuthCredentials(_oAuthAppRegForm.AccessToken);
         }
 
         public bool ApplyCredentialsToExchangeService(ExchangeService Exchange)
@@ -161,7 +168,11 @@ namespace SyncFolderItemsSample.Auth
                     return false;
 
                 case AuthType.OAuth:
-                    Exchange.Credentials = new OAuthCredentials(_oAuthAppRegForm.LastAuthResult.AccessToken);
+                    while (_oAuthAppRegForm.Authenticating)
+                        System.Threading.Tasks.Task.Yield();
+                    if (_oAuthAppRegForm.AccessToken == null)
+                        return false;
+                    Exchange.Credentials = new OAuthCredentials(_oAuthAppRegForm.AccessToken);
                     return true;
             }
 
