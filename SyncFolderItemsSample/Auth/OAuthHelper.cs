@@ -74,7 +74,7 @@ namespace SyncFolderItemsSample.Auth
                 var appBuilder = PublicClientApplicationBuilder
                     .CreateWithApplicationOptions(pcaOptions);
 
-                if (ClientId.Equals("4a03b746-45be-488c-bfe5-0ffdac557d68"))
+                if (ClientId.Equals("00d8c1e0-fe3c-40d3-8791-0f1132fed50b"))
                     _oAuthApplication = appBuilder.WithRedirectUri("http://localhost/SOAPe");
 
                 _oAuthApplication = appBuilder.Build();

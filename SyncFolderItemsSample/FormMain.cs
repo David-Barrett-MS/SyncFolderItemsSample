@@ -288,12 +288,13 @@ namespace SyncFolderItemsSample
             LogEvent("Synchronisation started");
 
             // Check we can get root folder
+            Folder msgFolderRoot;
             try
             {
                 _credentialHandler.UpdateOAuthCredentialsForExchangeService(_service);
                 SetClientRequestId();
                 // Add root folder to mailbox view
-                Folder msgFolderRoot = Folder.Bind(_service, WellKnownFolderName.MsgFolderRoot,
+                msgFolderRoot = Folder.Bind(_service, WellKnownFolderName.MsgFolderRoot,
                     new PropertySet(BasePropertySet.IdOnly, FolderSchema.DisplayName));
                 if (String.IsNullOrEmpty(_folderHeirarchySyncState))
                     _mailboxViewer?.AddFolder(msgFolderRoot.Id.UniqueId, null, msgFolderRoot.DisplayName);
@@ -301,6 +302,7 @@ namespace SyncFolderItemsSample
             catch (Exception ex)
             {
                 LogEvent(String.Format("Error binding to MsgFolderRoot: {0}", ex.Message));
+                _amSyncing = false;
                 return;
             }
 
@@ -313,13 +315,14 @@ namespace SyncFolderItemsSample
                 {
                     _credentialHandler.UpdateOAuthCredentialsForExchangeService(_service);
                     SetClientRequestId();
-                    folderChangeCollection = _service.SyncFolderHierarchy(new FolderId(WellKnownFolderName.MsgFolderRoot),
+                    folderChangeCollection = _service.SyncFolderHierarchy(msgFolderRoot.Id,
                         new PropertySet(BasePropertySet.IdOnly, FolderSchema.DisplayName, FolderSchema.ParentFolderId, PidTagAttributeHidden),
                         _folderHeirarchySyncState);
                 }
                 catch (Exception ex)
                 {
                     LogEvent(String.Format("Error calling SyncFolderHierarchy: {0}", ex.Message));
+                    _amSyncing = false;
                     return;
                 }
                 _folderHeirarchySyncState = folderChangeCollection.SyncState;
@@ -535,7 +538,7 @@ namespace SyncFolderItemsSample
                     LogEvent($"Error calling SyncFolderItems: {ex.Message}");
                     return syncState;
                 }
-                if (itemChangeCollection.Count != 0)
+                if (itemChangeCollection.Count > 0)
                 {
                     EventListBoxBeginUpdate();
                     foreach (ItemChange ic in itemChangeCollection)
@@ -579,6 +582,7 @@ namespace SyncFolderItemsSample
             if (_backGroundEWSTasks.Count>0)
             {
                 // Wait for any background EWS tasks to finish before moving onto next folder
+                // Background threads currently only used when custom properties are stamped on items
                 while (_backGroundEWSTasks.Count > 0)
                 {
                     while (_backGroundEWSTasks[0].Status == System.Threading.Tasks.TaskStatus.Running || _backGroundEWSTasks[0].Status == System.Threading.Tasks.TaskStatus.WaitingToRun)

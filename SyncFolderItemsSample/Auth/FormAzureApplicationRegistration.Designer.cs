@@ -58,11 +58,11 @@
             this.groupBox2.Controls.Add(this.label2);
             this.groupBox2.Controls.Add(this.label3);
             this.groupBox2.Controls.Add(this.textBoxApplicationId);
-            this.groupBox2.Location = new System.Drawing.Point(14, 12);
-            this.groupBox2.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            this.groupBox2.Location = new System.Drawing.Point(9, 8);
+            this.groupBox2.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.groupBox2.Name = "groupBox2";
-            this.groupBox2.Padding = new System.Windows.Forms.Padding(4, 3, 4, 3);
-            this.groupBox2.Size = new System.Drawing.Size(802, 158);
+            this.groupBox2.Padding = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.groupBox2.Size = new System.Drawing.Size(535, 103);
             this.groupBox2.TabIndex = 36;
             this.groupBox2.TabStop = false;
             this.groupBox2.Tag = "NoConfigSave";
@@ -70,18 +70,19 @@
             // 
             // textBoxResourceUrl
             // 
-            this.textBoxResourceUrl.Location = new System.Drawing.Point(184, 72);
+            this.textBoxResourceUrl.Location = new System.Drawing.Point(123, 47);
+            this.textBoxResourceUrl.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.textBoxResourceUrl.Name = "textBoxResourceUrl";
-            this.textBoxResourceUrl.Size = new System.Drawing.Size(602, 26);
+            this.textBoxResourceUrl.Size = new System.Drawing.Size(403, 20);
             this.textBoxResourceUrl.TabIndex = 22;
             this.textBoxResourceUrl.Text = "https://outlook.office365.com/";
             // 
             // textBoxTenantId
             // 
-            this.textBoxTenantId.Location = new System.Drawing.Point(184, 31);
-            this.textBoxTenantId.Margin = new System.Windows.Forms.Padding(6, 8, 6, 8);
+            this.textBoxTenantId.Location = new System.Drawing.Point(123, 20);
+            this.textBoxTenantId.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.textBoxTenantId.Name = "textBoxTenantId";
-            this.textBoxTenantId.Size = new System.Drawing.Size(602, 26);
+            this.textBoxTenantId.Size = new System.Drawing.Size(403, 20);
             this.textBoxTenantId.TabIndex = 20;
             this.textBoxTenantId.Text = "common";
             this.textBoxTenantId.TextChanged += new System.EventHandler(this.textBoxTenantId_TextChanged);
@@ -89,20 +90,20 @@
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(10, 114);
-            this.label1.Margin = new System.Windows.Forms.Padding(6, 0, 6, 0);
+            this.label1.Location = new System.Drawing.Point(7, 74);
+            this.label1.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(118, 20);
+            this.label1.Size = new System.Drawing.Size(80, 13);
             this.label1.TabIndex = 14;
             this.label1.Text = "Application ID*:";
             // 
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(10, 35);
-            this.label2.Margin = new System.Windows.Forms.Padding(6, 0, 6, 0);
+            this.label2.Location = new System.Drawing.Point(7, 23);
+            this.label2.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(90, 20);
+            this.label2.Size = new System.Drawing.Size(62, 13);
             this.label2.TabIndex = 15;
             this.label2.Tag = "";
             this.label2.Text = "Tenant ID*:";
@@ -110,21 +111,21 @@
             // label3
             // 
             this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(10, 77);
-            this.label3.Margin = new System.Windows.Forms.Padding(6, 0, 6, 0);
+            this.label3.Location = new System.Drawing.Point(7, 50);
+            this.label3.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(112, 20);
+            this.label3.Size = new System.Drawing.Size(76, 13);
             this.label3.TabIndex = 16;
             this.label3.Text = "Resource Url*:";
             // 
             // textBoxApplicationId
             // 
-            this.textBoxApplicationId.Location = new System.Drawing.Point(184, 111);
-            this.textBoxApplicationId.Margin = new System.Windows.Forms.Padding(6, 8, 6, 8);
+            this.textBoxApplicationId.Location = new System.Drawing.Point(123, 72);
+            this.textBoxApplicationId.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.textBoxApplicationId.Name = "textBoxApplicationId";
-            this.textBoxApplicationId.Size = new System.Drawing.Size(602, 26);
+            this.textBoxApplicationId.Size = new System.Drawing.Size(403, 20);
             this.textBoxApplicationId.TabIndex = 21;
-            this.textBoxApplicationId.Text = "4a03b746-45be-488c-bfe5-0ffdac557d68";
+            this.textBoxApplicationId.Text = "00d8c1e0-fe3c-40d3-8791-0f1132fed50b";
             // 
             // groupBoxAuth
             // 
@@ -134,11 +135,11 @@
             this.groupBoxAuth.Controls.Add(this.radioButtonAuthWithCertificate);
             this.groupBoxAuth.Controls.Add(this.radioButtonAuthWithClientSecret);
             this.groupBoxAuth.Controls.Add(this.textBoxClientSecret);
-            this.groupBoxAuth.Location = new System.Drawing.Point(12, 175);
-            this.groupBoxAuth.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.groupBoxAuth.Location = new System.Drawing.Point(8, 114);
+            this.groupBoxAuth.Margin = new System.Windows.Forms.Padding(2, 1, 2, 1);
             this.groupBoxAuth.Name = "groupBoxAuth";
-            this.groupBoxAuth.Padding = new System.Windows.Forms.Padding(3, 2, 3, 2);
-            this.groupBoxAuth.Size = new System.Drawing.Size(802, 134);
+            this.groupBoxAuth.Padding = new System.Windows.Forms.Padding(2, 1, 2, 1);
+            this.groupBoxAuth.Size = new System.Drawing.Size(535, 87);
             this.groupBoxAuth.TabIndex = 40;
             this.groupBoxAuth.TabStop = false;
             this.groupBoxAuth.Tag = "NoConfigSave";
@@ -148,9 +149,10 @@
             // 
             this.radioButtonAuthAsNativeApp.AutoSize = true;
             this.radioButtonAuthAsNativeApp.Checked = true;
-            this.radioButtonAuthAsNativeApp.Location = new System.Drawing.Point(10, 25);
+            this.radioButtonAuthAsNativeApp.Location = new System.Drawing.Point(7, 16);
+            this.radioButtonAuthAsNativeApp.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.radioButtonAuthAsNativeApp.Name = "radioButtonAuthAsNativeApp";
-            this.radioButtonAuthAsNativeApp.Size = new System.Drawing.Size(573, 24);
+            this.radioButtonAuthAsNativeApp.Size = new System.Drawing.Size(384, 17);
             this.radioButtonAuthAsNativeApp.TabIndex = 32;
             this.radioButtonAuthAsNativeApp.TabStop = true;
             this.radioButtonAuthAsNativeApp.Tag = "NoTextSave";
@@ -161,18 +163,18 @@
             // 
             // textBoxAuthCertificate
             // 
-            this.textBoxAuthCertificate.Location = new System.Drawing.Point(144, 89);
-            this.textBoxAuthCertificate.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.textBoxAuthCertificate.Location = new System.Drawing.Point(96, 58);
+            this.textBoxAuthCertificate.Margin = new System.Windows.Forms.Padding(2, 1, 2, 1);
             this.textBoxAuthCertificate.Name = "textBoxAuthCertificate";
-            this.textBoxAuthCertificate.Size = new System.Drawing.Size(560, 26);
+            this.textBoxAuthCertificate.Size = new System.Drawing.Size(375, 20);
             this.textBoxAuthCertificate.TabIndex = 31;
             // 
             // buttonLoadCertificate
             // 
-            this.buttonLoadCertificate.Location = new System.Drawing.Point(711, 86);
-            this.buttonLoadCertificate.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.buttonLoadCertificate.Location = new System.Drawing.Point(474, 56);
+            this.buttonLoadCertificate.Margin = new System.Windows.Forms.Padding(2, 1, 2, 1);
             this.buttonLoadCertificate.Name = "buttonLoadCertificate";
-            this.buttonLoadCertificate.Size = new System.Drawing.Size(75, 32);
+            this.buttonLoadCertificate.Size = new System.Drawing.Size(50, 21);
             this.buttonLoadCertificate.TabIndex = 30;
             this.buttonLoadCertificate.Text = "Select...";
             this.buttonLoadCertificate.UseVisualStyleBackColor = true;
@@ -181,10 +183,10 @@
             // radioButtonAuthWithCertificate
             // 
             this.radioButtonAuthWithCertificate.AutoSize = true;
-            this.radioButtonAuthWithCertificate.Location = new System.Drawing.Point(10, 89);
-            this.radioButtonAuthWithCertificate.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.radioButtonAuthWithCertificate.Location = new System.Drawing.Point(7, 58);
+            this.radioButtonAuthWithCertificate.Margin = new System.Windows.Forms.Padding(2, 1, 2, 1);
             this.radioButtonAuthWithCertificate.Name = "radioButtonAuthWithCertificate";
-            this.radioButtonAuthWithCertificate.Size = new System.Drawing.Size(110, 24);
+            this.radioButtonAuthWithCertificate.Size = new System.Drawing.Size(75, 17);
             this.radioButtonAuthWithCertificate.TabIndex = 28;
             this.radioButtonAuthWithCertificate.Tag = "NoTextSave";
             this.radioButtonAuthWithCertificate.Text = "Certificate:";
@@ -194,10 +196,10 @@
             // radioButtonAuthWithClientSecret
             // 
             this.radioButtonAuthWithClientSecret.AutoSize = true;
-            this.radioButtonAuthWithClientSecret.Location = new System.Drawing.Point(10, 57);
-            this.radioButtonAuthWithClientSecret.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.radioButtonAuthWithClientSecret.Location = new System.Drawing.Point(7, 37);
+            this.radioButtonAuthWithClientSecret.Margin = new System.Windows.Forms.Padding(2, 1, 2, 1);
             this.radioButtonAuthWithClientSecret.Name = "radioButtonAuthWithClientSecret";
-            this.radioButtonAuthWithClientSecret.Size = new System.Drawing.Size(126, 24);
+            this.radioButtonAuthWithClientSecret.Size = new System.Drawing.Size(86, 17);
             this.radioButtonAuthWithClientSecret.TabIndex = 0;
             this.radioButtonAuthWithClientSecret.Tag = "NoTextSave";
             this.radioButtonAuthWithClientSecret.Text = "Client secret:";
@@ -206,18 +208,18 @@
             // 
             // textBoxClientSecret
             // 
-            this.textBoxClientSecret.Location = new System.Drawing.Point(144, 55);
-            this.textBoxClientSecret.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.textBoxClientSecret.Location = new System.Drawing.Point(96, 36);
             this.textBoxClientSecret.Name = "textBoxClientSecret";
-            this.textBoxClientSecret.Size = new System.Drawing.Size(642, 26);
+            this.textBoxClientSecret.Size = new System.Drawing.Size(429, 20);
             this.textBoxClientSecret.TabIndex = 27;
             this.textBoxClientSecret.UseSystemPasswordChar = true;
             // 
             // buttonAcquireToken
             // 
-            this.buttonAcquireToken.Location = new System.Drawing.Point(12, 314);
+            this.buttonAcquireToken.Location = new System.Drawing.Point(8, 204);
+            this.buttonAcquireToken.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.buttonAcquireToken.Name = "buttonAcquireToken";
-            this.buttonAcquireToken.Size = new System.Drawing.Size(138, 34);
+            this.buttonAcquireToken.Size = new System.Drawing.Size(92, 22);
             this.buttonAcquireToken.TabIndex = 37;
             this.buttonAcquireToken.Text = "Acquire token";
             this.buttonAcquireToken.UseVisualStyleBackColor = true;
@@ -225,9 +227,10 @@
             // 
             // buttonClose
             // 
-            this.buttonClose.Location = new System.Drawing.Point(738, 315);
+            this.buttonClose.Location = new System.Drawing.Point(492, 205);
+            this.buttonClose.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.buttonClose.Name = "buttonClose";
-            this.buttonClose.Size = new System.Drawing.Size(75, 32);
+            this.buttonClose.Size = new System.Drawing.Size(50, 21);
             this.buttonClose.TabIndex = 50;
             this.buttonClose.Text = "Close";
             this.buttonClose.UseVisualStyleBackColor = true;
@@ -235,18 +238,17 @@
             // 
             // textBox1
             // 
-            this.textBox1.Location = new System.Drawing.Point(278, 395);
-            this.textBox1.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.textBox1.Location = new System.Drawing.Point(185, 257);
             this.textBox1.Name = "textBox1";
-            this.textBox1.Size = new System.Drawing.Size(252, 26);
+            this.textBox1.Size = new System.Drawing.Size(169, 20);
             this.textBox1.TabIndex = 51;
             this.textBox1.Text = "http://localhost/SOAPe";
             // 
             // FormAzureApplicationRegistration
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 20F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(830, 359);
+            this.ClientSize = new System.Drawing.Size(553, 233);
             this.Controls.Add(this.textBox1);
             this.Controls.Add(this.buttonAcquireToken);
             this.Controls.Add(this.buttonClose);
@@ -254,7 +256,6 @@
             this.Controls.Add(this.groupBox2);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
-            this.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.MaximizeBox = false;
             this.MinimizeBox = false;
             this.Name = "FormAzureApplicationRegistration";

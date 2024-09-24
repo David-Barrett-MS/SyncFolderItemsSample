@@ -31,6 +31,7 @@
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.treeViewMailboxView = new System.Windows.Forms.TreeView();
             this.listBoxFolderMessages = new System.Windows.Forms.ListBox();
+            this.richTextBoxItemView = new System.Windows.Forms.RichTextBox();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
@@ -49,9 +50,10 @@
             // 
             // splitContainer1.Panel2
             // 
+            this.splitContainer1.Panel2.Controls.Add(this.richTextBoxItemView);
             this.splitContainer1.Panel2.Controls.Add(this.listBoxFolderMessages);
-            this.splitContainer1.Size = new System.Drawing.Size(800, 450);
-            this.splitContainer1.SplitterDistance = 360;
+            this.splitContainer1.Size = new System.Drawing.Size(798, 422);
+            this.splitContainer1.SplitterDistance = 359;
             this.splitContainer1.TabIndex = 1;
             // 
             // treeViewMailboxView
@@ -59,24 +61,36 @@
             this.treeViewMailboxView.Dock = System.Windows.Forms.DockStyle.Fill;
             this.treeViewMailboxView.Location = new System.Drawing.Point(0, 0);
             this.treeViewMailboxView.Name = "treeViewMailboxView";
-            this.treeViewMailboxView.Size = new System.Drawing.Size(360, 450);
+            this.treeViewMailboxView.Size = new System.Drawing.Size(359, 422);
             this.treeViewMailboxView.TabIndex = 1;
             this.treeViewMailboxView.AfterSelect += new System.Windows.Forms.TreeViewEventHandler(this.treeViewMailboxView_AfterSelect);
             // 
             // listBoxFolderMessages
             // 
-            this.listBoxFolderMessages.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.listBoxFolderMessages.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.listBoxFolderMessages.FormattingEnabled = true;
             this.listBoxFolderMessages.Location = new System.Drawing.Point(0, 0);
             this.listBoxFolderMessages.Name = "listBoxFolderMessages";
-            this.listBoxFolderMessages.Size = new System.Drawing.Size(436, 450);
+            this.listBoxFolderMessages.Size = new System.Drawing.Size(432, 238);
             this.listBoxFolderMessages.TabIndex = 0;
+            this.listBoxFolderMessages.SelectedIndexChanged += new System.EventHandler(this.listBoxFolderMessages_SelectedIndexChanged);
+            // 
+            // richTextBoxItemView
+            // 
+            this.richTextBoxItemView.Dock = System.Windows.Forms.DockStyle.Bottom;
+            this.richTextBoxItemView.Location = new System.Drawing.Point(0, 242);
+            this.richTextBoxItemView.Name = "richTextBoxItemView";
+            this.richTextBoxItemView.Size = new System.Drawing.Size(435, 180);
+            this.richTextBoxItemView.TabIndex = 1;
+            this.richTextBoxItemView.Text = "";
             // 
             // FormSyncViewer
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(800, 450);
+            this.ClientSize = new System.Drawing.Size(798, 422);
             this.Controls.Add(this.splitContainer1);
             this.Name = "FormSyncViewer";
             this.Text = "Mailbox Viewer";
@@ -93,5 +107,6 @@
         private System.Windows.Forms.SplitContainer splitContainer1;
         private System.Windows.Forms.TreeView treeViewMailboxView;
         private System.Windows.Forms.ListBox listBoxFolderMessages;
+        private System.Windows.Forms.RichTextBox richTextBoxItemView;
     }
 }

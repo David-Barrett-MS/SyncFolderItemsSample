@@ -203,9 +203,10 @@ namespace SyncFolderItemsSample
 
             Dictionary<string, string> folderMessages = (Dictionary<string, string>)_folderIdToNode[FolderId].Tag;
             if (folderMessages.ContainsKey(MessageId))
+            {
                 folderMessages.Remove(MessageId);
-
-            UpdateFolderDisplay(FolderId);
+                UpdateFolderDisplay(FolderId);
+            }
         }
 
         /// <summary>
@@ -246,9 +247,34 @@ namespace SyncFolderItemsSample
             }
         }
 
+        /// <summary>
+        /// If an item is selected in listBoxFolderMessages, then retrieve and display the body of that item
+        /// </summary>
+        private void ShowSelectedFolderItem()
+        {
+            Action action = new Action(() =>
+            {
+                richTextBoxItemView.Text = "";
+            });
+            if (richTextBoxItemView.InvokeRequired)
+                richTextBoxItemView.Invoke(action);
+            else
+                action();
+
+            if (listBoxFolderMessages.SelectedIndex < 0)
+                return;
+
+
+        }
+
         private void treeViewMailboxView_AfterSelect(object sender, TreeViewEventArgs e)
         {
             ShowSelectedFolderMessages();
+        }
+
+        private void listBoxFolderMessages_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            ShowSelectedFolderItem();
         }
     }
 }
